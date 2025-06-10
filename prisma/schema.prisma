@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.lyly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Producer {
+  id            String   @id @default(uuid())
+  document      String   @unique
+  name          String
+  document_type String
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  farms Farm[]
+
+  @@map("producers")
+}
+
+model State {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  acronym   String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cities City[]
+
+  @@map("states")
+}
+
+model City {
+  id        String   @id @default(uuid())
+  name      String
+  state_id  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  state State  @relation(fields: [state_id], references: [id])
+  farms Farm[]
+
+  @@unique([name, state_id])
+  @@map("cities")
+}
+
+model Farm {
+  id                String   @id @default(uuid())
+  total_area        Float
+  farm_name         String
+  vegetation_area   Float
+  agricultural_area Float
+  city_id           String
+  producer_id       String
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  producer   Producer    @relation(fields: [producer_id], references: [id])
+  city       City        @relation(fields: [city_id], references: [id])
+  platations Platation[]
+
+  @@map("farms")
+}
+
+model Crop {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  platations Platation[]
+
+  @@map("crops")
+}
+
+model Harvest {
+  id        String   @id @default(uuid())
+  name      String
+  year      Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  platations Platation[]
+
+  @@map("harvests")
+}
+
+model Platation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+
+  farm_id    String
+  crop_id    String
+  harvest_id String
+  farm       Farm    @relation(fields: [farm_id], references: [id])
+  crop       Crop    @relation(fields: [crop_id], references: [id])
+  harvest    Harvest @relation(fields: [harvest_id], references: [id])
+
+  @@unique([farm_id, crop_id, harvest_id])
+  @@map("platations")
+}
