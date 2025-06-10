@@ -5,7 +5,7 @@ Este projeto implementa uma API RESTful para gerenciamento de produtores rurais,
 ## Estrutura do Projeto
 
 ### Diagrama Lógico
-![logic_diagram](./img/logic_diagram.png)
+![logic_diagram](./docs/img/logic_diagram.png){ width=500px height=400px }
 
 
 ### Estrutura de pastas
@@ -41,9 +41,9 @@ src/
 
 ## Alguns do Princípios SOLID Aplicados
 
-- S (Single Responsibility Principle): Cada componente (controlador, serviço, repositório, DTO) possui uma única responsabilidade bem definida. Por exemplo, os Controllers lidam apenas com requisições HTTP, os Services contêm a lógica de negócio e os Repositories gerenciam a persistência de dados.
-- O (Open/Closed Principle): O uso de interfaces para os repositórios (IProducersRepository, IFarmsRepository, etc.) permite que novas implementações de persistência sejam adicionadas sem modificar o código existente dos serviços, que dependem apenas da abstração.
-- I (Interface Segregation Principle): As interfaces dos repositórios são específicas para cada entidade, evitando que classes sejam forçadas a implementar métodos que não utilizam. Cada interface define apenas as operações relevantes para sua respectiva entidade.
+- **S (Single Responsibility Principle):** Cada componente (controlador, serviço, repositório, DTO) possui uma única responsabilidade bem definida. Por exemplo, os Controllers lidam apenas com requisições HTTP, os Services contêm a lógica de negócio e os Repositories gerenciam a persistência de dados.
+- **O (Open/Closed Principle):** O uso de interfaces para os repositórios (IProducersRepository, IFarmsRepository, etc.) permite que novas implementações de persistência sejam adicionadas sem modificar o código existente dos serviços, que dependem apenas da abstração.
+- **I (Interface Segregation Principle):** As interfaces dos repositórios são específicas para cada entidade, evitando que classes sejam forçadas a implementar métodos que não utilizam. Cada interface define apenas as operações relevantes para sua respectiva entidade.
 
 
 ## Principais pincípios de Domain-Driven Design (DDD) Utilizados
@@ -62,7 +62,7 @@ src/
   
 ## Como executar o projeto localmente
 Para executar que o projeto seja executado localmente, são necessárias algumas configurações:
-- [node.js](https://nodejs.org/en/) entre as versões ">=10.16.0 <=14.x.x"
+- [node.js](https://nodejs.org/en/)
 - [yarn](https://yarnpkg.com/getting-started/install)
 - [Docker](https://docs.docker.com/engine/installation/) e [Docker Compose](https://docs.docker.com/compose/install/) para execuçaão banco de dados **Postgres**
 
