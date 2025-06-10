@@ -5,7 +5,7 @@ Este projeto implementa uma API RESTful para gerenciamento de produtores rurais,
 ## Estrutura do Projeto
 
 ### Diagrama Lógico
-![logic_diagram](./docs/img/logic_diagram.png){ width=500px height=400px }
+<img src="./docs/img/logic_diagram.png" alt="Descrição da imagem" width="600" height="550">
 
 
 ### Estrutura de pastas
@@ -123,3 +123,9 @@ http://localhost:3000/api
 - Validação da área total (área agricultável + área vegetação < áre total)
 - Campos obrigatórios
 - Tratamento de erros
+
+----
+
+## Evoluções
+- Criar Pipeline CI/CD
+- Teste de carga
