@@ -1,10 +1,13 @@
 # Agro Gestor - Documentação
 
-Este projeto implementa uma API RESTful para gerenciamento de produtores rurais, utilizando NestJS, Prisma ORM e PostgreSQL, seguindo os princípios SOLID e Clean Code.
+Este projeto implementa uma API RESTful para gerenciamento de produtores rurais e suas plantações, utilizando NestJS, Prisma ORM e PostgreSQL, seguindo os princípios SOLID e Clean Code.
 
-## Estrutura do Projeto
+- Disponível em http://ec2-18-231-183-197.sa-east-1.compute.amazonaws.com
+- Documentação Swagger: http://ec2-18-231-183-197.sa-east-1.compute.amazonaws.com/api
 
-### Diagrama Lógico
+## Projeto
+
+### Diagrama lógico
 <img src="./docs/img/logic_diagram.png" alt="Descrição da imagem" width="600" height="550">
 
 
@@ -39,18 +42,33 @@ src/
 └── main.ts                  # Ponto de entrada da aplicação
 ```
 
-## Alguns do Princípios SOLID Aplicados
+### Representação da arquitetura de implantação
+
+![Arq Implantação](./docs//img//ec2_deploy.png)
+
+- Cliente (Browser): O navegador representa o cliente e inicia uma requisição HTTP (HTTP request) para acessar a aplicação.
+
+- Amazon EC2: Essa requisição é direcionada para uma instância do Amazon EC2, que hospeda os componentes da aplicação.
+
+- NGINX: Dentro da instância EC2, o NGINX atua como proxy reverso, recebendo as requisições do cliente e gerenciando o tráfego de entrada.
+
+- Aplicação Node.js (gerenciada por PM2): O NGINX encaminha as requisições para a aplicação Node.js, que está em execução localmente na porta 3000.
+Essa aplicação é gerenciada pelo PM2, um gerenciador de processos que mantém o serviço ativo e otimizado, garantindo maior disponibilidade e resiliência.
+
+
+### Alguns do Princípios SOLID Aplicados
 
 - **S (Single Responsibility Principle):** Cada componente (controlador, serviço, repositório, DTO) possui uma única responsabilidade bem definida. Por exemplo, os Controllers lidam apenas com requisições HTTP, os Services contêm a lógica de negócio e os Repositories gerenciam a persistência de dados.
 - **O (Open/Closed Principle):** O uso de interfaces para os repositórios (IProducersRepository, IFarmsRepository, etc.) permite que novas implementações de persistência sejam adicionadas sem modificar o código existente dos serviços, que dependem apenas da abstração.
 - **I (Interface Segregation Principle):** As interfaces dos repositórios são específicas para cada entidade, evitando que classes sejam forçadas a implementar métodos que não utilizam. Cada interface define apenas as operações relevantes para sua respectiva entidade.
 
 
-## Principais pincípios de Domain-Driven Design (DDD) Utilizados
+### Principais pincípios de Domain-Driven Design (DDD) Utilizados
 - Entidades: Modelagem de conceitos de negócio com identidade única (ex: Produtor, Fazenda).
 - Repositórios: Abstração da camada de persistência de dados.
 - Serviços: Encapsulamento da lógica de negócio e orquestração de operações.
 
+------
 ------
 
 ### :rocket: Principais Tecnologias Utilizadas
