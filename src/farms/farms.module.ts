@@ -5,8 +5,8 @@ import { PrismaModule } from '../prisma/prisma.module'
 import { IFarmsRepository } from './repositories/farms.repository'
 import { FarmsRepository } from './repositories/farms.prisma.repository'
 import { CitiesModule } from '../cities/cities.module'
-import { ICitiesRepository } from '@/cities/repositories/cities.repository'
-import { CitiesRepository } from '@/cities/repositories/cities.prisma.repository'
+import { ICitiesRepository } from '../cities/repositories/cities.repository'
+import { CitiesRepository } from '../cities/repositories/cities.prisma.repository'
 
 @Module({
   imports: [PrismaModule, CitiesModule],
