@@ -9,20 +9,33 @@ describe('CitiesService', () => {
   let citiesRepository: ICitiesRepository
   let statesRepository: IStatesRepository
 
-  const mockCitiesRepository = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findById: jest.fn(),
-    findByNameAndState: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+  let mockCitiesRepository: {
+    create: jest.Mock
+    findAll: jest.Mock
+    findById: jest.Mock
+    findByNameAndState: jest.Mock
+    update: jest.Mock
+    remove: jest.Mock
   }
 
-  const mockStatesRepository = {
-    findById: jest.fn(),
+  let mockStatesRepository: {
+    findById: jest.Mock
   }
 
   beforeEach(async () => {
+    mockCitiesRepository = {
+      create: jest.fn(),
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      findByNameAndState: jest.fn(),
+      update: jest.fn(),
+      remove: jest.fn(),
+    }
+
+    mockStatesRepository = {
+      findById: jest.fn(),
+    }
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CitiesService,
@@ -40,6 +53,10 @@ describe('CitiesService', () => {
     service = module.get<CitiesService>(CitiesService)
     citiesRepository = module.get<ICitiesRepository>(ICitiesRepository)
     statesRepository = module.get<IStatesRepository>(IStatesRepository)
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it('should be defined', () => {
@@ -172,7 +189,7 @@ describe('CitiesService', () => {
 
     it('should throw ConflictException if name and state already exist for another city', async () => {
       const existingCity = { id: '1', name: 'São Paulo', state_id: 'state1' }
-      const cityWithSameKeys = {
+      const conflictingCity = {
         id: '2',
         name: 'New City Name',
         state_id: 'state2',
@@ -180,9 +197,7 @@ describe('CitiesService', () => {
       const updateCityDto = { name: 'New City Name', state_id: 'state2' }
 
       mockCitiesRepository.findById.mockResolvedValue(existingCity)
-      mockCitiesRepository.findByNameAndState.mockResolvedValue(
-        cityWithSameKeys,
-      )
+      mockCitiesRepository.findByNameAndState.mockResolvedValue(conflictingCity)
 
       await expect(service.update('1', updateCityDto)).rejects.toThrow(
         ConflictException,

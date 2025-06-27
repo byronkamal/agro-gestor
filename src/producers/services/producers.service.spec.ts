@@ -5,9 +5,9 @@ import { NotFoundException, ConflictException } from '@nestjs/common'
 
 describe('ProducersService', () => {
   let service: ProducersService
-  let repository: IProducersRepository
+  let repository: jest.Mocked<IProducersRepository>
 
-  const mockProducersRepository = {
+  const mockProducersRepository: jest.Mocked<IProducersRepository> = {
     create: jest.fn(),
     findAll: jest.fn(),
     findById: jest.fn(),
@@ -28,7 +28,11 @@ describe('ProducersService', () => {
     }).compile()
 
     service = module.get<ProducersService>(ProducersService)
-    repository = module.get<IProducersRepository>(IProducersRepository)
+    repository = module.get<IProducersRepository>(
+      IProducersRepository,
+    ) as jest.Mocked<IProducersRepository>
+
+    jest.clearAllMocks()
   })
 
   it('should be defined', () => {
@@ -42,8 +46,8 @@ describe('ProducersService', () => {
         name: 'Test Producer',
         document_type: 'CPF',
       }
-      mockProducersRepository.findByDocument.mockResolvedValue(null)
-      mockProducersRepository.create.mockResolvedValue({
+      repository.findByDocument.mockResolvedValue(null)
+      repository.create.mockResolvedValue({
         id: '1',
         ...createProducerDto,
       })
@@ -62,7 +66,7 @@ describe('ProducersService', () => {
         name: 'Test Producer',
         document_type: 'CPF',
       }
-      mockProducersRepository.findByDocument.mockResolvedValue({
+      repository.findByDocument.mockResolvedValue({
         id: '1',
         ...createProducerDto,
       })
@@ -82,7 +86,7 @@ describe('ProducersService', () => {
       const producers = [
         { id: '1', document: '123', name: 'P1', document_type: 'CPF' },
       ]
-      mockProducersRepository.findAll.mockResolvedValue(producers)
+      repository.findAll.mockResolvedValue(producers)
 
       const result = await service.findAll()
       expect(result).toEqual(producers)
@@ -98,7 +102,7 @@ describe('ProducersService', () => {
         name: 'P1',
         document_type: 'CPF',
       }
-      mockProducersRepository.findById.mockResolvedValue(producer)
+      repository.findById.mockResolvedValue(producer)
 
       const result = await service.findOne('1')
       expect(result).toEqual(producer)
@@ -106,7 +110,7 @@ describe('ProducersService', () => {
     })
 
     it('should throw NotFoundException if producer not found', async () => {
-      mockProducersRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(service.findOne('nonexistent')).rejects.toThrow(
         NotFoundException,
@@ -124,9 +128,9 @@ describe('ProducersService', () => {
         document_type: 'CPF',
       }
       const updateProducerDto = { name: 'Updated Producer' }
-      mockProducersRepository.findById.mockResolvedValue(existingProducer)
-      mockProducersRepository.findByDocument.mockResolvedValue(null) // No conflict
-      mockProducersRepository.update.mockResolvedValue({
+      repository.findById.mockResolvedValue(existingProducer)
+      repository.findByDocument.mockResolvedValue(null)
+      repository.update.mockResolvedValue({
         ...existingProducer,
         ...updateProducerDto,
       })
@@ -138,7 +142,7 @@ describe('ProducersService', () => {
     })
 
     it('should throw NotFoundException if producer not found', async () => {
-      mockProducersRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(
         service.update('nonexistent', { name: 'Updated' }),
@@ -162,10 +166,8 @@ describe('ProducersService', () => {
       }
       const updateProducerDto = { document: 'newdoc' }
 
-      mockProducersRepository.findById.mockResolvedValue(existingProducer)
-      mockProducersRepository.findByDocument.mockResolvedValue(
-        producerWithSameDocument,
-      )
+      repository.findById.mockResolvedValue(existingProducer)
+      repository.findByDocument.mockResolvedValue(producerWithSameDocument)
 
       await expect(service.update('1', updateProducerDto)).rejects.toThrow(
         ConflictException,
@@ -186,8 +188,8 @@ describe('ProducersService', () => {
         name: 'P1',
         document_type: 'CPF',
       }
-      mockProducersRepository.findById.mockResolvedValue(existingProducer)
-      mockProducersRepository.remove.mockResolvedValue(undefined)
+      repository.findById.mockResolvedValue(existingProducer)
+      repository.remove.mockResolvedValue(undefined)
 
       await service.remove('1')
       expect(repository.findById).toHaveBeenCalledWith('1')
@@ -195,7 +197,7 @@ describe('ProducersService', () => {
     })
 
     it('should throw NotFoundException if producer not found', async () => {
-      mockProducersRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(service.remove('nonexistent')).rejects.toThrow(
         NotFoundException,

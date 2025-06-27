@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing'
+import { NotFoundException, BadRequestException } from '@nestjs/common'
 import { FarmsService } from './farms.service'
 import { IFarmsRepository } from '../repositories/farms.repository'
-import { NotFoundException, BadRequestException } from '@nestjs/common'
+import { ICitiesRepository } from '../../cities/repositories/cities.repository'
+import { IProducersRepository } from '../../producers/repositories/producers.repository'
 
 describe('FarmsService', () => {
   let service: FarmsService
@@ -15,6 +17,24 @@ describe('FarmsService', () => {
     remove: jest.fn(),
   }
 
+  const mockCitiesRepository = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByNameAndState: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  }
+
+  const mockProducersRepository = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findById: jest.fn(),
+    findByDocument: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  }
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -23,14 +43,24 @@ describe('FarmsService', () => {
           provide: IFarmsRepository,
           useValue: mockFarmsRepository,
         },
+        {
+          provide: ICitiesRepository,
+          useValue: mockCitiesRepository,
+        },
+        {
+          provide: IProducersRepository,
+          useValue: mockProducersRepository,
+        },
       ],
     }).compile()
 
     service = module.get<FarmsService>(FarmsService)
     repository = module.get<IFarmsRepository>(IFarmsRepository)
+
+    jest.clearAllMocks()
   })
 
-  it('should be defined', () => {
+  it('should be defined', function (this: void) {
     expect(service).toBeDefined()
   })
 
@@ -43,26 +73,52 @@ describe('FarmsService', () => {
         agricultural_area: 30,
         city_id: 'city1',
         producer_id: 'producer1',
+        validate: jest.fn(),
       }
+
+      const city = { id: 'city1', name: 'City Test' }
+      const producer = {
+        id: 'producer1',
+        name: 'Producer Test',
+        document: '123.456.789-00',
+        document_type: 'CPF',
+      }
+
+      mockProducersRepository.findById.mockResolvedValue(producer)
+      mockCitiesRepository.findById.mockResolvedValue(city)
       mockFarmsRepository.create.mockResolvedValue({
         id: '1',
         ...createFarmDto,
       })
 
       const result = await service.create(createFarmDto)
+
       expect(result).toEqual({ id: '1', ...createFarmDto })
       expect(repository.create).toHaveBeenCalledWith(createFarmDto)
+      expect(mockCitiesRepository.findById).toHaveBeenCalledWith('city1')
     })
 
-    it('should throw BadRequestException if total area is less than sum of vegetation and agricultural areas', async () => {
+    it('should throw BadRequestException if total area is less than sum of vegetation and agricultural areas', async function (this: void) {
       const createFarmDto = {
-        total_area: 40,
-        farm_name: 'Test Farm',
+        total_area: 30,
         vegetation_area: 20,
-        agricultural_area: 30,
+        agricultural_area: 20,
+        farm_name: 'Test Farm',
         city_id: 'city1',
         producer_id: 'producer1',
+        validate: jest.fn(),
       }
+
+      const city = { id: 'city1', name: 'City Test' }
+      const producer = {
+        id: 'producer1',
+        name: 'Producer Test',
+        document: '123.456.789-00',
+        document_type: 'CPF',
+      }
+
+      mockProducersRepository.findById.mockResolvedValue(producer)
+      mockCitiesRepository.findById.mockResolvedValue(city)
 
       await expect(service.create(createFarmDto)).rejects.toThrow(
         BadRequestException,
@@ -72,7 +128,7 @@ describe('FarmsService', () => {
   })
 
   describe('findAll', () => {
-    it('should return an array of farms', async () => {
+    it('should return an array of farms', async function (this: void) {
       const farms = [
         {
           id: '1',
@@ -93,7 +149,7 @@ describe('FarmsService', () => {
   })
 
   describe('findOne', () => {
-    it('should return a farm by ID', async () => {
+    it('should return a farm by ID', async function (this: void) {
       const farm = {
         id: '1',
         total_area: 100,
@@ -110,7 +166,7 @@ describe('FarmsService', () => {
       expect(repository.findById).toHaveBeenCalledWith('1')
     })
 
-    it('should throw NotFoundException if farm not found', async () => {
+    it('should throw NotFoundException if farm not found', async function (this: void) {
       mockFarmsRepository.findById.mockResolvedValue(null)
 
       await expect(service.findOne('nonexistent')).rejects.toThrow(
@@ -121,7 +177,7 @@ describe('FarmsService', () => {
   })
 
   describe('update', () => {
-    it('should update a farm', async () => {
+    it('should update a farm', async function (this: void) {
       const existingFarm = {
         id: '1',
         total_area: 100,
@@ -144,7 +200,7 @@ describe('FarmsService', () => {
       expect(repository.update).toHaveBeenCalledWith('1', updateFarmDto)
     })
 
-    it('should throw NotFoundException if farm not found', async () => {
+    it('should throw NotFoundException if farm not found', async function (this: void) {
       mockFarmsRepository.findById.mockResolvedValue(null)
 
       await expect(
@@ -154,7 +210,7 @@ describe('FarmsService', () => {
       expect(repository.update).not.toHaveBeenCalled()
     })
 
-    it('should throw BadRequestException if updated areas exceed total area', async () => {
+    it('should throw BadRequestException if updated areas exceed total area', async function (this: void) {
       const existingFarm = {
         id: '1',
         total_area: 100,
@@ -164,7 +220,7 @@ describe('FarmsService', () => {
         city_id: 'city1',
         producer_id: 'producer1',
       }
-      const updateFarmDto = { vegetation_area: 60, agricultural_area: 50 } // Sum is 110, exceeds 100
+      const updateFarmDto = { vegetation_area: 60, agricultural_area: 50 }
 
       mockFarmsRepository.findById.mockResolvedValue(existingFarm)
 
@@ -177,7 +233,7 @@ describe('FarmsService', () => {
   })
 
   describe('remove', () => {
-    it('should remove a farm', async () => {
+    it('should remove a farm', async function (this: void) {
       const existingFarm = {
         id: '1',
         total_area: 100,
@@ -195,7 +251,7 @@ describe('FarmsService', () => {
       expect(repository.remove).toHaveBeenCalledWith('1')
     })
 
-    it('should throw NotFoundException if farm not found', async () => {
+    it('should throw NotFoundException if farm not found', async function (this: void) {
       mockFarmsRepository.findById.mockResolvedValue(null)
 
       await expect(service.remove('nonexistent')).rejects.toThrow(

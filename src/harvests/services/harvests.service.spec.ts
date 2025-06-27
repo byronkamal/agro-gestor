@@ -7,15 +7,23 @@ describe('HarvestsService', () => {
   let service: HarvestsService
   let repository: IHarvestsRepository
 
-  const mockHarvestsRepository = {
-    create: jest.fn(),
-    findAll: jest.fn(),
-    findById: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+  let mockHarvestsRepository: {
+    create: jest.Mock
+    findAll: jest.Mock
+    findById: jest.Mock
+    update: jest.Mock
+    remove: jest.Mock
   }
 
   beforeEach(async () => {
+    mockHarvestsRepository = {
+      create: jest.fn(),
+      findAll: jest.fn(),
+      findById: jest.fn(),
+      update: jest.fn(),
+      remove: jest.fn(),
+    }
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HarvestsService,
@@ -28,6 +36,10 @@ describe('HarvestsService', () => {
 
     service = module.get<HarvestsService>(HarvestsService)
     repository = module.get<IHarvestsRepository>(IHarvestsRepository)
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it('should be defined', () => {

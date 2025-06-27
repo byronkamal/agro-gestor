@@ -5,9 +5,9 @@ import { NotFoundException, ConflictException } from '@nestjs/common'
 
 describe('StatesService', () => {
   let service: StatesService
-  let repository: IStatesRepository
+  let repository: jest.Mocked<IStatesRepository>
 
-  const mockStatesRepository = {
+  const mockStatesRepository: jest.Mocked<IStatesRepository> = {
     create: jest.fn(),
     findAll: jest.fn(),
     findById: jest.fn(),
@@ -29,7 +29,8 @@ describe('StatesService', () => {
     }).compile()
 
     service = module.get<StatesService>(StatesService)
-    repository = module.get<IStatesRepository>(IStatesRepository)
+    repository = module.get(IStatesRepository)
+    jest.clearAllMocks()
   })
 
   it('should be defined', () => {
@@ -39,14 +40,12 @@ describe('StatesService', () => {
   describe('create', () => {
     it('should create a state', async () => {
       const createStateDto = { name: 'São Paulo', acronym: 'SP' }
-      mockStatesRepository.findByName.mockResolvedValue(null)
-      mockStatesRepository.findByAcronym.mockResolvedValue(null)
-      mockStatesRepository.create.mockResolvedValue({
-        id: '1',
-        ...createStateDto,
-      })
+      repository.findByName.mockResolvedValue(null)
+      repository.findByAcronym.mockResolvedValue(null)
+      repository.create.mockResolvedValue({ id: '1', ...createStateDto })
 
       const result = await service.create(createStateDto)
+
       expect(result).toEqual({ id: '1', ...createStateDto })
       expect(repository.findByName).toHaveBeenCalledWith(createStateDto.name)
       expect(repository.findByAcronym).toHaveBeenCalledWith(
@@ -57,10 +56,7 @@ describe('StatesService', () => {
 
     it('should throw ConflictException if state with name already exists', async () => {
       const createStateDto = { name: 'São Paulo', acronym: 'SP' }
-      mockStatesRepository.findByName.mockResolvedValue({
-        id: '1',
-        ...createStateDto,
-      })
+      repository.findByName.mockResolvedValue({ id: '1', ...createStateDto })
 
       await expect(service.create(createStateDto)).rejects.toThrow(
         ConflictException,
@@ -72,11 +68,8 @@ describe('StatesService', () => {
 
     it('should throw ConflictException if state with acronym already exists', async () => {
       const createStateDto = { name: 'Rio de Janeiro', acronym: 'RJ' }
-      mockStatesRepository.findByName.mockResolvedValue(null)
-      mockStatesRepository.findByAcronym.mockResolvedValue({
-        id: '1',
-        ...createStateDto,
-      })
+      repository.findByName.mockResolvedValue(null)
+      repository.findByAcronym.mockResolvedValue({ id: '1', ...createStateDto })
 
       await expect(service.create(createStateDto)).rejects.toThrow(
         ConflictException,
@@ -92,7 +85,7 @@ describe('StatesService', () => {
   describe('findAll', () => {
     it('should return an array of states', async () => {
       const states = [{ id: '1', name: 'São Paulo', acronym: 'SP' }]
-      mockStatesRepository.findAll.mockResolvedValue(states)
+      repository.findAll.mockResolvedValue(states)
 
       const result = await service.findAll()
       expect(result).toEqual(states)
@@ -103,7 +96,7 @@ describe('StatesService', () => {
   describe('findOne', () => {
     it('should return a state by ID', async () => {
       const state = { id: '1', name: 'São Paulo', acronym: 'SP' }
-      mockStatesRepository.findById.mockResolvedValue(state)
+      repository.findById.mockResolvedValue(state)
 
       const result = await service.findOne('1')
       expect(result).toEqual(state)
@@ -111,7 +104,7 @@ describe('StatesService', () => {
     })
 
     it('should throw NotFoundException if state not found', async () => {
-      mockStatesRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(service.findOne('nonexistent')).rejects.toThrow(
         NotFoundException,
@@ -124,10 +117,10 @@ describe('StatesService', () => {
     it('should update a state', async () => {
       const existingState = { id: '1', name: 'São Paulo', acronym: 'SP' }
       const updateStateDto = { name: 'Sao Paulo Updated' }
-      mockStatesRepository.findById.mockResolvedValue(existingState)
-      mockStatesRepository.findByName.mockResolvedValue(null)
-      mockStatesRepository.findByAcronym.mockResolvedValue(null)
-      mockStatesRepository.update.mockResolvedValue({
+      repository.findById.mockResolvedValue(existingState)
+      repository.findByName.mockResolvedValue(null)
+      repository.findByAcronym.mockResolvedValue(null)
+      repository.update.mockResolvedValue({
         ...existingState,
         ...updateStateDto,
       })
@@ -139,7 +132,7 @@ describe('StatesService', () => {
     })
 
     it('should throw NotFoundException if state not found', async () => {
-      mockStatesRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(
         service.update('nonexistent', { name: 'Updated' }),
@@ -153,12 +146,12 @@ describe('StatesService', () => {
       const stateWithSameName = {
         id: '2',
         name: 'New State Name',
-        acronym: 'NN',
+        acronym: 'NS',
       }
       const updateStateDto = { name: 'New State Name' }
 
-      mockStatesRepository.findById.mockResolvedValue(existingState)
-      mockStatesRepository.findByName.mockResolvedValue(stateWithSameName)
+      repository.findById.mockResolvedValue(existingState)
+      repository.findByName.mockResolvedValue(stateWithSameName)
 
       await expect(service.update('1', updateStateDto)).rejects.toThrow(
         ConflictException,
@@ -177,9 +170,9 @@ describe('StatesService', () => {
       }
       const updateStateDto = { acronym: 'AS' }
 
-      mockStatesRepository.findById.mockResolvedValue(existingState)
-      mockStatesRepository.findByName.mockResolvedValue(null)
-      mockStatesRepository.findByAcronym.mockResolvedValue(stateWithSameAcronym)
+      repository.findById.mockResolvedValue(existingState)
+      repository.findByName.mockResolvedValue(null)
+      repository.findByAcronym.mockResolvedValue(stateWithSameAcronym)
 
       await expect(service.update('1', updateStateDto)).rejects.toThrow(
         ConflictException,
@@ -195,8 +188,8 @@ describe('StatesService', () => {
   describe('remove', () => {
     it('should remove a state', async () => {
       const existingState = { id: '1', name: 'São Paulo', acronym: 'SP' }
-      mockStatesRepository.findById.mockResolvedValue(existingState)
-      mockStatesRepository.remove.mockResolvedValue(undefined)
+      repository.findById.mockResolvedValue(existingState)
+      repository.remove.mockResolvedValue(undefined)
 
       await service.remove('1')
       expect(repository.findById).toHaveBeenCalledWith('1')
@@ -204,7 +197,7 @@ describe('StatesService', () => {
     })
 
     it('should throw NotFoundException if state not found', async () => {
-      mockStatesRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(service.remove('nonexistent')).rejects.toThrow(
         NotFoundException,

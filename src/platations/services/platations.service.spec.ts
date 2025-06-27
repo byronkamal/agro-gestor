@@ -3,18 +3,18 @@ import { PlatationsService } from './platations.service'
 import { IPlatationsRepository } from '../repositories/platations.repository'
 import { NotFoundException, ConflictException } from '@nestjs/common'
 
-describe('PlatationsService', () => {
+describe('PlatationsService', function () {
   let service: PlatationsService
-  let repository: IPlatationsRepository
+  let repository: jest.Mocked<IPlatationsRepository>
 
-  const mockPlatationsRepository = {
+  const mockRepository = (): jest.Mocked<IPlatationsRepository> => ({
     create: jest.fn(),
     findAll: jest.fn(),
     findById: jest.fn(),
     findByUniqueKeys: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
-  }
+  })
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,13 +22,17 @@ describe('PlatationsService', () => {
         PlatationsService,
         {
           provide: IPlatationsRepository,
-          useValue: mockPlatationsRepository,
+          useValue: mockRepository(),
         },
       ],
     }).compile()
 
     service = module.get<PlatationsService>(PlatationsService)
-    repository = module.get<IPlatationsRepository>(IPlatationsRepository)
+    repository = module.get(IPlatationsRepository)
+  })
+
+  afterEach(() => {
+    jest.clearAllMocks()
   })
 
   it('should be defined', () => {
@@ -37,80 +41,75 @@ describe('PlatationsService', () => {
 
   describe('create', () => {
     it('should create a platation', async () => {
-      const createPlatationDto = {
+      const dto = {
         farm_id: 'farm1',
         crop_id: 'crop1',
         harvest_id: 'harvest1',
       }
-      mockPlatationsRepository.findByUniqueKeys.mockResolvedValue(null)
-      mockPlatationsRepository.create.mockResolvedValue({
-        id: '1',
-        ...createPlatationDto,
-      })
 
-      const result = await service.create(createPlatationDto)
-      expect(result).toEqual({ id: '1', ...createPlatationDto })
+      repository.findByUniqueKeys.mockResolvedValue(null)
+      repository.create.mockResolvedValue({ id: '1', ...dto })
+
+      const result = await service.create(dto)
+
+      expect(result).toEqual({ id: '1', ...dto })
       expect(repository.findByUniqueKeys).toHaveBeenCalledWith(
-        createPlatationDto.farm_id,
-        createPlatationDto.crop_id,
-        createPlatationDto.harvest_id,
+        dto.farm_id,
+        dto.crop_id,
+        dto.harvest_id,
       )
-      expect(repository.create).toHaveBeenCalledWith(createPlatationDto)
+      expect(repository.create).toHaveBeenCalledWith(dto)
     })
 
-    it('should throw ConflictException if platation with unique keys already exists', async () => {
-      const createPlatationDto = {
+    it('should throw ConflictException if platation already exists', async () => {
+      const dto = {
         farm_id: 'farm1',
         crop_id: 'crop1',
         harvest_id: 'harvest1',
       }
-      mockPlatationsRepository.findByUniqueKeys.mockResolvedValue({
-        id: '1',
-        ...createPlatationDto,
-      })
 
-      await expect(service.create(createPlatationDto)).rejects.toThrow(
-        ConflictException,
-      )
-      expect(repository.findByUniqueKeys).toHaveBeenCalledWith(
-        createPlatationDto.farm_id,
-        createPlatationDto.crop_id,
-        createPlatationDto.harvest_id,
-      )
+      repository.findByUniqueKeys.mockResolvedValue({ id: 'existing', ...dto })
+
+      await expect(service.create(dto)).rejects.toThrow(ConflictException)
+      expect(repository.findByUniqueKeys).toHaveBeenCalled()
       expect(repository.create).not.toHaveBeenCalled()
     })
   })
 
   describe('findAll', () => {
-    it('should return an array of platations', async () => {
-      const platations = [
+    it('should return all platations', async () => {
+      const data = [
         { id: '1', farm_id: 'farm1', crop_id: 'crop1', harvest_id: 'harvest1' },
       ]
-      mockPlatationsRepository.findAll.mockResolvedValue(platations)
+
+      repository.findAll.mockResolvedValue(data)
 
       const result = await service.findAll()
-      expect(result).toEqual(platations)
+
+      expect(result).toEqual(data)
       expect(repository.findAll).toHaveBeenCalled()
     })
   })
 
   describe('findOne', () => {
-    it('should return a platation by ID', async () => {
-      const platation = {
+    it('should return platation by ID', async () => {
+      const data = {
         id: '1',
         farm_id: 'farm1',
         crop_id: 'crop1',
         harvest_id: 'harvest1',
       }
-      mockPlatationsRepository.findById.mockResolvedValue(platation)
+
+      repository.findById.mockResolvedValue(data)
 
       const result = await service.findOne('1')
-      expect(result).toEqual(platation)
+
+      expect(result).toEqual(data)
       expect(repository.findById).toHaveBeenCalledWith('1')
     })
 
     it('should throw NotFoundException if platation not found', async () => {
-      mockPlatationsRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(service.findOne('nonexistent')).rejects.toThrow(
         NotFoundException,
@@ -121,87 +120,78 @@ describe('PlatationsService', () => {
 
   describe('update', () => {
     it('should update a platation', async () => {
-      const existingPlatation = {
+      const existing = {
         id: '1',
         farm_id: 'farm1',
         crop_id: 'crop1',
         harvest_id: 'harvest1',
       }
-      const updatePlatationDto = { crop_id: 'crop2' }
-      mockPlatationsRepository.findById.mockResolvedValue(existingPlatation)
-      mockPlatationsRepository.findByUniqueKeys.mockResolvedValue(null) // No conflict
-      mockPlatationsRepository.update.mockResolvedValue({
-        ...existingPlatation,
-        ...updatePlatationDto,
-      })
+      const dto = { crop_id: 'crop2' }
 
-      const result = await service.update('1', updatePlatationDto)
-      expect(result).toEqual({ ...existingPlatation, ...updatePlatationDto })
+      repository.findById.mockResolvedValue(existing)
+      repository.findByUniqueKeys.mockResolvedValue(null)
+      repository.update.mockResolvedValue({ ...existing, ...dto })
+
+      const result = await service.update('1', dto)
+
+      expect(result).toEqual({ ...existing, ...dto })
       expect(repository.findById).toHaveBeenCalledWith('1')
-      expect(repository.update).toHaveBeenCalledWith('1', updatePlatationDto)
+      expect(repository.findByUniqueKeys).toHaveBeenCalledWith(
+        existing.farm_id,
+        dto.crop_id,
+        existing.harvest_id,
+      )
+      expect(repository.update).toHaveBeenCalledWith('1', dto)
     })
 
     it('should throw NotFoundException if platation not found', async () => {
-      mockPlatationsRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(
-        service.update('nonexistent', { crop_id: 'crop2' }),
+        service.update('nonexistent', { crop_id: 'any' }),
       ).rejects.toThrow(NotFoundException)
       expect(repository.findById).toHaveBeenCalledWith('nonexistent')
       expect(repository.update).not.toHaveBeenCalled()
     })
 
-    it('should throw ConflictException if unique keys already exist for another platation', async () => {
-      const existingPlatation = {
+    it('should throw ConflictException if unique constraint fails', async () => {
+      const existing = {
         id: '1',
         farm_id: 'farm1',
         crop_id: 'crop1',
         harvest_id: 'harvest1',
       }
-      const platationWithSameKeys = {
-        id: '2',
-        farm_id: 'farm1',
-        crop_id: 'crop2',
-        harvest_id: 'harvest1',
-      }
-      const updatePlatationDto = { crop_id: 'crop2' }
+      const dto = { crop_id: 'crop2' }
+      const conflict = { id: '2', ...existing, crop_id: 'crop2' }
 
-      mockPlatationsRepository.findById.mockResolvedValue(existingPlatation)
-      mockPlatationsRepository.findByUniqueKeys.mockResolvedValue(
-        platationWithSameKeys,
-      )
+      repository.findById.mockResolvedValue(existing)
+      repository.findByUniqueKeys.mockResolvedValue(conflict)
 
-      await expect(service.update('1', updatePlatationDto)).rejects.toThrow(
-        ConflictException,
-      )
-      expect(repository.findById).toHaveBeenCalledWith('1')
-      expect(repository.findByUniqueKeys).toHaveBeenCalledWith(
-        existingPlatation.farm_id,
-        updatePlatationDto.crop_id,
-        existingPlatation.harvest_id,
-      )
+      await expect(service.update('1', dto)).rejects.toThrow(ConflictException)
       expect(repository.update).not.toHaveBeenCalled()
     })
   })
 
   describe('remove', () => {
     it('should remove a platation', async () => {
-      const existingPlatation = {
+      const existing = {
         id: '1',
         farm_id: 'farm1',
         crop_id: 'crop1',
         harvest_id: 'harvest1',
       }
-      mockPlatationsRepository.findById.mockResolvedValue(existingPlatation)
-      mockPlatationsRepository.remove.mockResolvedValue(undefined)
+
+      repository.findById.mockResolvedValue(existing)
+      repository.remove.mockResolvedValue(undefined)
 
       await service.remove('1')
+
       expect(repository.findById).toHaveBeenCalledWith('1')
       expect(repository.remove).toHaveBeenCalledWith('1')
     })
 
     it('should throw NotFoundException if platation not found', async () => {
-      mockPlatationsRepository.findById.mockResolvedValue(null)
+      repository.findById.mockResolvedValue(null)
 
       await expect(service.remove('nonexistent')).rejects.toThrow(
         NotFoundException,

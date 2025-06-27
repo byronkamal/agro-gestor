@@ -26,5 +26,5 @@ export class CreateProducerDto {
   @IsString()
   @IsNotEmpty()
   @IsIn(['CPF', 'CNPJ'])
-  document_type: 'CPF' | 'CNPJ'
+  document_type: string
 }

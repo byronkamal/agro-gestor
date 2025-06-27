@@ -14,7 +14,7 @@ async function bootstrap() {
   )
 
   const config = new DocumentBuilder()
-    .setTitle('Agricultural API')
+    .setTitle('Agro Gestor API')
     .setDescription('API para gerenciamento de dados agrícolas')
     .setVersion('1.0')
     .addTag('agricultural')

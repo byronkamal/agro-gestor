@@ -126,6 +126,34 @@ docker-compose up
    yarn start:dev
    ```
 
+### Testes Unitários
+1. Execute o comando:
+```
+yarn test
+```
+
+### Testes de integração (End-to-End)
+1. Inicie o container de serviço do banco de dados - **teste**:
+
+```
+docker compose -f docker-compose.test.yml up -d 
+```
+
+2. Faça as migrações do Prisma:
+```
+npx dotenv -e .env.test -- prisma migrate deploy 
+```
+
+3. Execute o comando de teste:
+```
+yarn test:e2e
+```
+
+4. Depois dos testes, pare os serviços docker:
+```
+docker compose down
+```
+
 
 ### Documentação Swagger
 
